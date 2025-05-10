@@ -25,7 +25,7 @@ This is a browser-based tool for calculating the optimal move in the game "6 nim
 （GitHub Pagesなどで公開した場合、ここにリンクを貼ってください）  
 (If hosted via GitHub Pages, paste the link here)
 
-例: https://yourusername.github.io/nimmuto-best-move/
+例: https://yourusername.github.io/nimmt-best-move/
 
 ---
 
