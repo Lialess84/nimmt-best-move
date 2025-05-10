@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ニムト最善手計算機（4人対戦）</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    label { display: block; margin-top: 1em; }
+    input[type="text"] { width: 100%; padding: 0.5em; }
+    button { margin-top: 1em; padding: 0.5em 1em; }
+    #result { margin-top: 2em; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>ニムト最善手計算機（4人対戦）</h1>
+  <p>※ このツールは4人対戦を前提としています。他人数での使用は正確な判断ができない場合があります。</p>
+
+  <label>手札（カンマ区切り）:</label>
+  <input type="text" id="hand" placeholder="例: 12, 35, 57, 88, 103">
+
+  <label>場の右端のカード（4列分・カンマ区切り）:</label>
+  <input type="text" id="lastCards" placeholder="例: 11, 34, 56, 87">
+
+  <label>各列の枚数（カンマ区切り）:</label>
+  <input type="text" id="rowLengths" placeholder="例: 2, 3, 4, 1">
+
+  <button onclick="calculateBestMove()">最善手を計算</button>
+
+  <div id="result"></div>
+
+  <script>
+    function parseInput(input) {
+      return input.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+    }
+
+    function getCowPoints(card) {
+      if (card === 55) return 7;
+      if (card % 11 === 0) return 5;
+      if (card % 10 === 0) return 3;
+      if (card % 5 === 0) return 2;
+      return 1;
+    }
+
+    function calculateBestMove() {
+      const hand = parseInput(document.getElementById("hand").value);
+      const lastCards = parseInput(document.getElementById("lastCards").value);
+      const rowLengths = parseInput(document.getElementById("rowLengths").value);
+
+      if (hand.length === 0 || lastCards.length !== 4 || rowLengths.length !== 4) {
+        document.getElementById("result").innerText = "入力が不正です（4列分の情報が必要です）。";
+        return;
+      }
+
+      let bestCard = null;
+      let bestRow = -1;
+      let minRisk = Infinity;
+
+      for (const card of hand) {
+        let bestLocalRow = -1;
+        let minDiff = Infinity;
+
+        for (let i = 0; i < 4; i++) {
+          const diff = card - lastCards[i];
+          if (diff > 0 && diff < minDiff) {
+            minDiff = diff;
+            bestLocalRow = i;
+          }
+        }
+
+        if (bestLocalRow !== -1) {
+          const futureLength = rowLengths[bestLocalRow] + 1;
+          const risk = futureLength <= 5 ? getCowPoints(card) : 1000;
+
+          if (risk < minRisk || (risk === minRisk && card < bestCard)) {
+            minRisk = risk;
+            bestCard = card;
+            bestRow = bestLocalRow;
+          }
+        }
+      }
+
+      let resultText = "";
+
+      if (bestCard !== null) {
+        resultText = `推奨カード: ${bestCard} → 列 ${bestRow + 1}（牛ポイント: ${getCowPoints(bestCard)}）`;
+      } else {
+        const sortedByRisk = hand.map(c => ({ card: c, risk: getCowPoints(c) }))
+                                 .sort((a, b) => a.risk - b.risk || a.card - b.card);
+        const pick = sortedByRisk[0];
+        resultText = `すべての列に置けません。最も牛ポイントが少ないカードを選び列を選択してください: ${pick.card}（牛ポイント: ${pick.risk}）`;
+      }
+
+      document.getElementById("result").innerText = resultText;
+    }
+  </script>
+</body>
+</html>
